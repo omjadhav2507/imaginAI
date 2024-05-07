@@ -6,7 +6,7 @@ async function query(data) {
     "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0",
     {
       headers: {
-        Authorization: `Bearer ${VITE_AI_API}`,
+        Authorization: `Bearer ${import.meta.env.VITE_AI_API}`,
         "Content-Type": "application/json",
       },
       method: "POST",
