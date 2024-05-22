@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { Modal } from "bootstrap";
 
 async function query(data) {
@@ -6,7 +6,7 @@ async function query(data) {
     "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0",
     {
       headers: {
-        Authorization: `Bearer ${import.meta.env.VITE_AI_API}`,
+        Authorization: "Bearer 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",
         "Content-Type": "application/json",
       },
       method: "POST",
@@ -57,24 +57,19 @@ const Home = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError(null); // Clear any previous errors
+    setError(null);
     try {
-      const variation1 = " - Variation 1";
-      const variation2 = " - Variation 2";
-      const variation3 = " - Variation 3";
-      const variation4 = " - Variation 4";
+      const variations = [
+        " - Variation 1",
+        " - Variation 2",
+        " - Variation 3",
+        " - Variation 4",
+      ];
+      const prompts = variations.map((variation) => inputText + variation);
 
-      const prompt1 = inputText + variation1;
-      const prompt2 = inputText + variation2;
-      const prompt3 = inputText + variation3;
-      const prompt4 = inputText + variation4;
-
-      const responses = await Promise.all([
-        query({ inputs: prompt1 }),
-        query({ inputs: prompt2 }),
-        query({ inputs: prompt3 }),
-        query({ inputs: prompt4 }),
-      ]);
+      const responses = await Promise.all(
+        prompts.map((prompt) => query({ inputs: prompt }))
+      );
 
       setImageData(responses);
       localStorage.setItem("generatedImages", JSON.stringify(responses));
@@ -103,8 +98,10 @@ const Home = () => {
     new Modal(document.getElementById("imageModal")).show();
   };
 
+  const heroDataMemo = useMemo(() => HeroData, []);
+
   return (
-    <div className="container" style={{ width: "55%" }}>
+    <div className="container" style={{ maxWidth: "90%" }}>
       <h1 className="text-center mt-5 mb-2">AI Image Generator</h1>
       <p className="text-center mt-2 mb-4">
         An AI-powered text-to-image generator that provides you with endless
@@ -117,8 +114,7 @@ const Home = () => {
             type="text"
             className="form-control py-3"
             placeholder="Describe what you want to see"
-            aria-label="Recipient's username"
-            aria-describedby="basic-addon2"
+            aria-label="Recipient's input"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
           />
@@ -157,8 +153,8 @@ const Home = () => {
         {error && <div className="text-danger">{error}</div>}
       </form>
 
-      {imageData.length > 0 && !loading && (
-        <div className="row row-cols-1 row-cols-md-2 g-2">
+      {imageData.length > 0 && !loading ? (
+        <div className="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-2">
           {imageData.map((imageSrc, index) => (
             <div key={index} className="col">
               <div className="card position-relative p-0 m-0">
@@ -166,10 +162,11 @@ const Home = () => {
                   className="card-img-top"
                   style={{
                     backgroundImage: `url(${imageSrc})`,
-                    backgroundSize: "100% 100%",
-                    height: "350px",
+                    backgroundSize: "cover",
+                    height: "250px",
                   }}
                   alt={`Generated image ${index + 1}`}
+                  onClick={() => handleDownload(imageSrc)}
                 ></div>
                 <button
                   className="btn btn-light position-absolute top-0 end-0 m-2"
@@ -191,12 +188,10 @@ const Home = () => {
             </div>
           ))}
         </div>
-      )}
-
-      {imageData.length === 0 && !loading && (
-        <div className="row">
-          {HeroData.map((item, index) => (
-            <div key={index} className="col-lg-4 col-md-6 mb-4">
+      ) : (
+        <div className="row row-cols-2 row-cols-sm-3 row-cols-md-6 g-2">
+          {heroDataMemo.map((item, index) => (
+            <div key={index} className="col mb-4">
               <div
                 className="position-relative"
                 onClick={() => openModal(item.img, item.caption)}
